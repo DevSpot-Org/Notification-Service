@@ -9,23 +9,21 @@ interface UserConnection {
     connectedAt: Date;
     metadata?: Record<string, any>;
 }
+interface SocketManagerOptions {
+    cors: CorsOptions;
+    maxConnectionsPerUser: number;
+    debug: boolean;
+}
 
 export class SocketManager {
     private io: Server;
     private userConnections: Map<string, Set<UserConnection>> = new Map();
     private socketToUser: Map<string, string> = new Map();
     private notificationService: NotificationService;
+    private maxConnectionsPerUser: number;
     private debug: boolean;
 
-    constructor(
-        server: http.Server,
-        notificationService: NotificationService,
-        options: {
-            cors?: CorsOptions;
-            maxConnectionsPerUser?: number;
-            debug?: boolean;
-        } = {},
-    ) {
+    constructor(server: http.Server, notificationService: NotificationService, options: Partial<SocketManagerOptions> = {}) {
         this.io = new Server(server, {
             cors: options.cors || {
                 origin: '*',
@@ -35,6 +33,7 @@ export class SocketManager {
         });
 
         this.notificationService = notificationService;
+        this.maxConnectionsPerUser = options.maxConnectionsPerUser || 2;
         this.debug = options.debug || false;
 
         this.setupSocketServer();
@@ -183,6 +182,10 @@ export class SocketManager {
         this.log(`User ${userId} authenticated on socket ${socket.id}`);
         this.log(`User ${userId} has ${connectionsCount} active connections`);
 
+        if (this.maxConnectionsPerUser > 0 && connectionsCount > this.maxConnectionsPerUser) {
+            this.enforceConnectionLimit(userId);
+        }
+
         socket.emit('authenticated', {
             success: true,
             connectionCount: this.userConnections.get(userId)?.size || 1,
@@ -258,6 +261,30 @@ export class SocketManager {
         }
 
         this.log(`Cleanup complete. Active users: ${this.userConnections.size}, Active sockets: ${this.socketToUser.size}`);
+    }
+
+    private enforceConnectionLimit(userId: string): void {
+        const connections = this.userConnections.get(userId);
+        if (!connections || connections.size <= this.maxConnectionsPerUser) return;
+
+        const sortedConnections = Array.from(connections).sort((a, b) => a.connectedAt.getTime() - b.connectedAt.getTime());
+
+        const connectionsToRemove = sortedConnections.slice(0, sortedConnections.length - this.maxConnectionsPerUser);
+
+        for (const conn of connectionsToRemove) {
+            this.log(`Enforcing connection limit: Disconnecting socket ${conn.socketId} for user ${userId}`);
+
+            const socket = this.io.sockets.sockets.get(conn.socketId);
+            if (socket) {
+                socket.emit('connection_limit', {
+                    message: 'You have exceeded the maximum number of concurrent connections',
+                });
+                socket.disconnect(true);
+            }
+
+            connections.delete(conn);
+            this.socketToUser.delete(conn.socketId);
+        }
     }
 
     private async sendPendingNotifications(userId: string): Promise<void> {
