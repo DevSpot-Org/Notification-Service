@@ -1,4 +1,4 @@
-import { NotificationType } from '../types';
+import { NotificationType } from '@/core';
 import { NotificationCategory } from './enum';
 import { EventConfig } from './interface';
 

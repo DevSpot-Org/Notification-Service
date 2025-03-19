@@ -1,7 +1,8 @@
 import * as ejs from 'ejs';
 import fs from 'fs';
 import path from 'path';
-import { NotificationType } from '../types';
+import { NotificationType } from '@/core';
+import { BadRequestError } from '../core/errors';
 
 interface ParseResult {
     requiredVariables: string[];
@@ -12,7 +13,7 @@ export class TemplateParser {
     private templatesBasePath: string;
 
     constructor() {
-        this.templatesBasePath = path.join(__dirname, './src');
+        this.templatesBasePath = path.join(__dirname, '../events/templates');
     }
     /**
      * Renders an EJS template with provided data.
@@ -24,7 +25,7 @@ export class TemplateParser {
         try {
             return ejs.render(template, data);
         } catch (error: any) {
-            throw new Error(`EJS Rendering Error: ${error.message}`);
+            throw new BadRequestError(`EJS Rendering Error: ${error.message}`);
         }
     }
 
@@ -66,7 +67,7 @@ export class TemplateParser {
         try {
             ejs.compile(template);
         } catch (error: any) {
-            throw new Error(`EJS Compilation Error: ${error.message}`);
+            throw new BadRequestError(`EJS Compilation Error: ${error.message}`);
         }
 
         return {
@@ -76,7 +77,7 @@ export class TemplateParser {
     }
 
     async getTemplateFromEvent(channel: NotificationType, templateName: string) {
-        const templatePath = path.join(this.templatesBasePath, channel, templateName);
+        const templatePath = path.join(this.templatesBasePath, channel, `${templateName}.ejs`);
 
         const templateContent = await fs.promises.readFile(templatePath, 'utf-8');
 
@@ -87,7 +88,8 @@ export class TemplateParser {
         const missingVariables = requiredVariables.filter((variable) => !(variable in data));
 
         if (missingVariables.length > 0) {
-            throw new Error(`Missing required variables: ${missingVariables.join(', ')}`);
+            throw new BadRequestError(`Missing required variables: ${missingVariables.join(', ')}`);
         }
     }
 }
+

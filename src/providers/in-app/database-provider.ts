@@ -1,5 +1,5 @@
 import { socketManager } from '../../index';
-import { Notification, NotificationType } from '../../types';
+import { Notification, NotificationType } from '@/core';
 import { BaseNotificationProvider } from '../provider-interface';
 
 export class DatabaseProvider extends BaseNotificationProvider {

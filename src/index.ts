@@ -2,6 +2,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
 import http from 'http';
+import 'module-alias/register';
+import { errorHandler } from './core';
 import { corsOptions, supabase } from './core/config';
 import { initializeProviders } from './providers';
 import { NotificationRepository } from './repositories/notification-repository';
@@ -40,10 +42,15 @@ app.get('/health', (_, res) => {
     res.json(stats);
 });
 
+// Error handling middleware should be last
+app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    errorHandler.handle(err, req, res, next).catch(next);
+});
+
 const PORT = process.env.PORT || 3000;
 
 server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
 
-export { app, io, socketManager, supabase };
+export { io, socketManager };

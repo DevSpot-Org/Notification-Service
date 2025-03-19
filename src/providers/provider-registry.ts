@@ -1,4 +1,4 @@
-import { NotificationType } from '../types';
+import { NotificationType } from '@/core';
 import { NotificationProvider } from './provider-interface';
 
 export class ProviderRegistry {

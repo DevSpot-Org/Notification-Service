@@ -1,8 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { Server } from 'socket.io';
 import { NotificationCategory } from '../events/enum';
-import { supabase } from '../index';
-import { DeliveryStatus, Notification } from '../types';
+import { DeliveryStatus, Notification, supabase } from '@/core';
 
 export class NotificationRepository {
     private supabase: ReturnType<typeof createClient>;

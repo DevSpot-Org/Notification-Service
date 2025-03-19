@@ -1,3 +1,4 @@
+import { Notification, NotificationEvent, NotificationType } from '@/core';
 import { appConfig } from '../core/config';
 import { BadRequestError } from '../core/errors';
 import { events } from '../events';
@@ -6,7 +7,6 @@ import { NotificationProvider } from '../providers/provider-interface';
 import { ProviderRegistry } from '../providers/provider-registry';
 import { NotificationRepository } from '../repositories/notification-repository';
 import { PreferenceRepository } from '../repositories/preference-repository';
-import { Notification, NotificationEvent, NotificationType } from '../types';
 import { TemplateParser } from './template.service';
 
 export class NotificationService {
@@ -55,7 +55,7 @@ export class NotificationService {
             for (const channel of preferences.channels) {
                 if (!eventConfig[channel]) continue;
 
-                this.validateEventTemplateAgainstVariables(channel, eventConfig, event.payload);
+                await this.validateEventTemplateAgainstVariables(channel, eventConfig, event.payload);
             }
 
             const notification: Notification = {
@@ -131,18 +131,16 @@ export class NotificationService {
     }
 
     private async validateEventTemplateAgainstVariables(channel: NotificationType, eventConfig: EventConfig, payload: Record<any, any>) {
-        try {
-            const templateContent = await this.templateParser.getTemplateFromEvent(channel, eventConfig[channel]!);
+        const templateContent = await this.templateParser.getTemplateFromEvent(channel, eventConfig[channel]!);
 
-            const parseResult = this.templateParser.parseTemplate(templateContent);
+        const parseResult = this.templateParser.parseTemplate(templateContent);
 
-            const templateRequiredVariables = parseResult.requiredVariables;
+        const templateRequiredVariables = parseResult.requiredVariables;
 
-            this.templateParser.validateDataAgainstRequiredVariables(templateRequiredVariables, payload);
-        } catch (error: any) {
-            throw new BadRequestError(`Template parsing failed. Ensure the template string is valid. - ${error?.message}`);
-        }
+        this.templateParser.validateDataAgainstRequiredVariables(templateRequiredVariables, payload);
     }
+
+    
 
     public async markAsRead(notificationId: string): Promise<void> {
         await this.repository.markAsRead(notificationId);

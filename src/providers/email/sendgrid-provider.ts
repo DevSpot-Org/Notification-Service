@@ -2,7 +2,7 @@ import { createTransport } from 'nodemailer';
 import sendgridTransport from 'nodemailer-sendgrid';
 import { config } from '../../core/config';
 import { BadRequestError } from '../../core/errors';
-import { Notification, NotificationType } from '../../types';
+import { Notification, NotificationType } from '@/core';
 import { BaseNotificationProvider } from '../provider-interface';
 
 export class SendgridProvider extends BaseNotificationProvider {

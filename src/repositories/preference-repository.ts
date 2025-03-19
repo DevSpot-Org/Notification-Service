@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { supabase } from '../index';
-import { NotificationPreference, NotificationType } from '../types';
+import {supabase, NotificationPreference, NotificationType } from '@/core';
 
 export class PreferenceRepository {
     private supabase: ReturnType<typeof createClient>;

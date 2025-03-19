@@ -1,7 +1,7 @@
 import twilio from 'twilio';
 import { config } from '../../core/config';
 import { BadRequestError } from '../../core/errors';
-import { Notification, NotificationType } from '../../types';
+import { Notification, NotificationType } from '@/core';
 import { BaseNotificationProvider } from '../provider-interface';
 
 export class TwilioProvider extends BaseNotificationProvider {

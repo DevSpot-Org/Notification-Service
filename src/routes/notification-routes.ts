@@ -1,8 +1,8 @@
+import { NotificationType } from '@/core';
 import express from 'express';
 import { validateSchema } from '../core/utils';
 import { PreferenceRepository } from '../repositories/preference-repository';
 import { NotificationService } from '../services/notification.service';
-import { NotificationType } from '../types';
 import {
     getUserNotificationsQuerySchema,
     notificationIdParamSchema,
@@ -116,7 +116,7 @@ router.post(
 );
 
 // Send notification event
-router.post('/send-event', validateSchema(sendEventSchema, 'body'), async (req, res) => {
+router.post('/send-event', validateSchema(sendEventSchema, 'body'), async (req, res, next) => {
     try {
         const { eventType, targetUserIds, payload } = req.body;
 
@@ -127,9 +127,8 @@ router.post('/send-event', validateSchema(sendEventSchema, 'body'), async (req, 
         });
 
         res.json({ success: true });
-    } catch (error) {
-        console.error('Error sending notification event:', error);
-        res.status(500).json({ success: false, error: 'Failed to send notification event' });
+    } catch (error: any) {
+        next(error);
     }
 });
 

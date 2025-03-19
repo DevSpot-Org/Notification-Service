@@ -1,4 +1,4 @@
-import { NotificationCategory } from '../events/enum';
+import { NotificationCategory } from "@/events/enum";
 
 export enum NotificationType {
     EMAIL = 'email',
