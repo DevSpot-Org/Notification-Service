@@ -84,7 +84,6 @@ export class NotificationService {
     private async sendToChannel(notification: Notification, channel: NotificationType, content: string): Promise<void> {
         try {
             const provider = this.getProviderForChannel(channel);
-            console.log('channel' , channel, 'provider', provider)
 
             if (!provider) {
                 console.error(`No provider configured for channel ${channel}`);
@@ -127,6 +126,8 @@ export class NotificationService {
                 providerName = appConfig.providers.inApp.default;
                 break;
         }
+
+        console.log(providerName, 'provider', channel, 'channel')
 
         return this.providerRegistry.getProvider(channel, providerName);
     }
