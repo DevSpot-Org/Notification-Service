@@ -62,7 +62,7 @@ server.listen(PORT, () => {
         } catch (error: unknown) {
             console.error('Self call failed:', error instanceof Error ? error.message : 'Unknown error');
         }
-    }, 14 * 60 * 1000);
+    }, 10 * 60 * 1000);
 });
 
 export { io, socketManager };
