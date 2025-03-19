@@ -6,9 +6,9 @@ import { TwilioProvider } from './sms/twilio-provider';
 export function initializeProviders(): void {
     const registry = ProviderRegistry.getInstance();
 
-    registry.registerProvider(new SendgridProvider());
+    // registry.registerProvider(new SendgridProvider());
 
-    registry.registerProvider(new TwilioProvider());
+    // registry.registerProvider(new TwilioProvider());
 
     registry.registerProvider(new DatabaseProvider());
 }

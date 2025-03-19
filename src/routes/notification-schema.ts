@@ -31,7 +31,7 @@ export const updatePreferenceParamsSchema = Joi.object({
 export const updatePreferenceBodySchema = Joi.object({
     channels: Joi.object({
         email: Joi.boolean().required(),
-        in_app: Joi.boolean().required(),
+        'in-app': Joi.boolean().required(),
     })
         .required()
         .custom((value, helpers) => {

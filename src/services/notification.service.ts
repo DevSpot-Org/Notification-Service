@@ -84,6 +84,7 @@ export class NotificationService {
     private async sendToChannel(notification: Notification, channel: NotificationType, content: string): Promise<void> {
         try {
             const provider = this.getProviderForChannel(channel);
+            console.log('channel' , channel, 'provider', provider)
 
             if (!provider) {
                 console.error(`No provider configured for channel ${channel}`);
@@ -140,8 +141,6 @@ export class NotificationService {
         this.templateParser.validateDataAgainstRequiredVariables(templateRequiredVariables, payload);
     }
 
-    
-
     public async markAsRead(notificationId: string): Promise<void> {
         await this.repository.markAsRead(notificationId);
     }
@@ -151,7 +150,7 @@ export class NotificationService {
     }
 
     public async getUserNotifications(userId: string, options?: { limit?: number; offset?: number; unreadOnly?: boolean }): Promise<Notification[]> {
-        return this.repository.getUserNotifications(userId, options);
+        return this.repository.getUserInAppNotifications(userId, options);
     }
 
     public async getUnreadCount(userId: string): Promise<number> {

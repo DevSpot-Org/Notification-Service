@@ -33,7 +33,7 @@ export class SocketManager {
         });
 
         this.notificationService = notificationService;
-        this.maxConnectionsPerUser = options.maxConnectionsPerUser || 2;
+        this.maxConnectionsPerUser = options.maxConnectionsPerUser || 1;
         this.debug = options.debug || false;
 
         this.setupSocketServer();
@@ -129,6 +129,12 @@ export class SocketManager {
 
         socket.on('error', (error: Error) => {
             this.log(`Socket error (${socket.id}):`, error);
+        });
+
+        socket.on('joinRoom', (room) => {
+            socket.join(room);
+
+            console.log(`Socket ${socket.id} joined room ${room}`);
         });
 
         const authTimeout = setTimeout(() => {

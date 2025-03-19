@@ -1,5 +1,5 @@
-import { DefaultInAppTemplate } from './default.view';
+import defaultTemplate from './default.ejs';
 
 export const inAppTemplates = {
-    default: DefaultInAppTemplate,
+    default: defaultTemplate,
 };

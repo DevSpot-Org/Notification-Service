@@ -25,7 +25,7 @@ const notificationService = NotificationService.getInstance();
 
 const socketManager = new SocketManager(server, notificationService, {
     cors: corsOptions,
-    debug: false,
+    debug: true,
 });
 
 const io = socketManager.getIO();

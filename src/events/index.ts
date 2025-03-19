@@ -8,7 +8,7 @@ export const events: EventConfig[] = [
         title: 'Welcome Signup',
         description: 'Sent when a user signs up for the first time',
         category: NotificationCategory.TO_ACCOUNT_SETUP,
-        [NotificationType.SMS]: 'default',
+        [NotificationType.IN_APP]: 'default',
         [NotificationType.EMAIL]: 'hackathon_invitation',
     },
 ];

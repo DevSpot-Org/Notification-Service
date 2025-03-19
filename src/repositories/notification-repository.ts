@@ -1,7 +1,7 @@
+import { DeliveryStatus, Notification, NotificationType, supabase } from '@/core';
 import { createClient } from '@supabase/supabase-js';
 import { Server } from 'socket.io';
 import { NotificationCategory } from '../events/enum';
-import { DeliveryStatus, Notification, supabase } from '@/core';
 
 export class NotificationRepository {
     private supabase: ReturnType<typeof createClient>;
@@ -81,11 +81,21 @@ export class NotificationRepository {
         }
     }
 
-    public async getUserNotifications(
+    public async getUserInAppNotifications(
         userId: string,
         options: { limit?: number; offset?: number; unreadOnly?: boolean } = {},
     ): Promise<Notification[]> {
-        let query = this.supabase.from('notifications').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+        let query = this.supabase
+            .from('notifications')
+            .select('*')
+            .eq('user_id', userId)
+            .in(
+                'id',
+                (await this.supabase.from('notification_delivery_status').select('notification_id').eq('channel', NotificationType.IN_APP)).data?.map(
+                    (nds) => nds.notification_id,
+                ) ?? [],
+            )
+            .order('created_at', { ascending: false });
 
         if (options.limit) {
             query = query.limit(options.limit);
