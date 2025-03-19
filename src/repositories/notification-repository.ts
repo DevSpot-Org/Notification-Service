@@ -133,7 +133,13 @@ export class NotificationRepository {
             .from('notifications')
             .select('*', { count: 'exact', head: true })
             .eq('user_id', userId)
-            .eq('read', false);
+            .eq('read', false)
+            .in(
+                'id',
+                (
+                    await this.supabase.from('notification_delivery_status').select('notification_id').eq('channel', NotificationType.IN_APP)
+                ).data?.map((nds) => nds.notification_id) ?? [],
+            );
 
         if (error) {
             console.error('Error getting unread count:', error);

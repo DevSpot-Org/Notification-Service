@@ -4,7 +4,7 @@ import { BaseNotificationProvider } from '../provider-interface';
 
 export class DatabaseProvider extends BaseNotificationProvider {
     constructor() {
-        super('database', NotificationType.IN_APP);
+        super('socket.io', NotificationType.IN_APP);
     }
 
     public async send(notification: Notification): Promise<void> {

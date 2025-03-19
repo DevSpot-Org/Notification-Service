@@ -25,12 +25,12 @@ export const appConfig: AppConfig = {
             available: ['sendgrid'],
         },
         sms: {
-            default: 'twilio',
+            default: '',
             available: ['twilio'],
         },
         inApp: {
-            default: 'database',
-            available: ['database'],
+            default: 'socket.io',
+            available: ['socket.io'],
         },
     },
     templates: {

@@ -1,7 +1,6 @@
 import { CorsOptions } from 'cors';
 import http from 'http';
 import { Server, Socket } from 'socket.io';
-import { NotificationService } from './notification.service';
 
 interface UserConnection {
     socketId: string;
@@ -19,11 +18,10 @@ export class SocketManager {
     private io: Server;
     private userConnections: Map<string, Set<UserConnection>> = new Map();
     private socketToUser: Map<string, string> = new Map();
-    private notificationService: NotificationService;
     private maxConnectionsPerUser: number;
     private debug: boolean;
 
-    constructor(server: http.Server, notificationService: NotificationService, options: Partial<SocketManagerOptions> = {}) {
+    constructor(server: http.Server, options: Partial<SocketManagerOptions> = {}) {
         this.io = new Server(server, {
             cors: options.cors || {
                 origin: '*',
@@ -32,7 +30,6 @@ export class SocketManager {
             },
         });
 
-        this.notificationService = notificationService;
         this.maxConnectionsPerUser = options.maxConnectionsPerUser || 1;
         this.debug = options.debug || false;
 
@@ -196,9 +193,6 @@ export class SocketManager {
             success: true,
             connectionCount: this.userConnections.get(userId)?.size || 1,
         });
-
-        // Send any pending notifications
-        this.sendPendingNotifications(userId);
     }
 
     private handleDisconnect(socket: Socket, reason: string): void {
@@ -290,23 +284,6 @@ export class SocketManager {
 
             connections.delete(conn);
             this.socketToUser.delete(conn.socketId);
-        }
-    }
-
-    private async sendPendingNotifications(userId: string): Promise<void> {
-        try {
-            const notifications = await this.notificationService.getUserNotifications(userId, {
-                limit: 10,
-                unreadOnly: true,
-            });
-
-            if (notifications.length > 0) {
-                this.log(`Sending ${notifications.length} pending notifications to user ${userId}`);
-
-                this.io.to(`user:${userId}`).emit('pending_notifications', notifications);
-            }
-        } catch (error) {
-            this.log(`Error sending pending notifications to user ${userId}:`, error);
         }
     }
 }

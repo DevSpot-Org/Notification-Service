@@ -8,7 +8,6 @@ import { corsOptions, supabase } from './core/config';
 import { initializeProviders } from './providers';
 import { NotificationRepository } from './repositories/notification-repository';
 import { notificationRoutes } from './routes/notification-routes';
-import { NotificationService } from './services/notification.service';
 import { SocketManager } from './services/socket-manager.service';
 dotenv.config();
 
@@ -21,11 +20,9 @@ initializeProviders();
 
 app.use('/api/notifications', notificationRoutes);
 
-const notificationService = NotificationService.getInstance();
-
-const socketManager = new SocketManager(server, notificationService, {
+const socketManager = new SocketManager(server, {
     cors: corsOptions,
-    debug: true,
+    debug: false,
 });
 
 const io = socketManager.getIO();
