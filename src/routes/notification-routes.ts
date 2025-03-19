@@ -1,30 +1,44 @@
 import express from 'express';
+import { validateSchema } from '../core/utils';
+import { PreferenceRepository } from '../repositories/preference-repository';
 import { NotificationService } from '../services/notification.service';
-import { PreferenceService } from '../services/preference.service';
-import { NotificationEventType, NotificationType } from '../types';
+import { NotificationType } from '../types';
+import {
+    getUserNotificationsQuerySchema,
+    notificationIdParamSchema,
+    sendEventSchema,
+    updatePreferenceBodySchema,
+    updatePreferenceParamsSchema,
+    userIdParamSchema,
+} from './notification-schema';
 
 const router = express.Router();
 const notificationService = NotificationService.getInstance();
-const preferenceService = new PreferenceService();
+const preferenceService = new PreferenceRepository();
 
 // Get user notifications
-router.get('/user/:userId', async (req, res) => {
-    try {
-        const userId = req.params.userId;
-        const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
-        const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
+router.get(
+    '/user/:userId',
+    validateSchema(userIdParamSchema, 'params'),
+    validateSchema(getUserNotificationsQuerySchema, 'query'),
+    async (req, res) => {
+        try {
+            const userId = req.params.userId;
+            const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+            const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
 
-        const notifications = await notificationService.getUserNotifications(userId, { limit, offset });
+            const notifications = await notificationService.getUserNotifications(userId, { limit, offset });
 
-        res.json({ success: true, notifications });
-    } catch (error) {
-        console.error('Error getting user notifications:', error);
-        res.status(500).json({ success: false, error: 'Failed to get notifications' });
-    }
-});
+            res.json({ success: true, notifications });
+        } catch (error) {
+            console.error('Error getting user notifications:', error);
+            res.status(500).json({ success: false, error: 'Failed to get notifications' });
+        }
+    },
+);
 
 // Get user unread count
-router.get('/user/:userId/unread', async (req, res) => {
+router.get('/user/:userId/unread', validateSchema(userIdParamSchema, 'params'), async (req, res) => {
     try {
         const userId = req.params.userId;
         const count = await notificationService.getUnreadCount(userId);
@@ -37,7 +51,7 @@ router.get('/user/:userId/unread', async (req, res) => {
 });
 
 // Mark notification as read
-router.post('/read/:notificationId', async (req, res) => {
+router.post('/read/:notificationId', validateSchema(notificationIdParamSchema, 'params'), async (req, res) => {
     try {
         const notificationId = req.params.notificationId;
         await notificationService.markAsRead(notificationId);
@@ -50,7 +64,7 @@ router.post('/read/:notificationId', async (req, res) => {
 });
 
 // Mark all notifications as read
-router.post('/read-all/:userId', async (req, res) => {
+router.post('/read-all/:userId', validateSchema(userIdParamSchema, 'params'), async (req, res) => {
     try {
         const userId = req.params.userId;
         await notificationService.markAllAsRead(userId);
@@ -66,10 +80,10 @@ router.post('/read-all/:userId', async (req, res) => {
 });
 
 // Get user notification preferences
-router.get('/preferences/:userId', async (req, res) => {
+router.get('/preferences/:userId', validateSchema(userIdParamSchema, 'params'), async (req, res) => {
     try {
         const userId = req.params.userId;
-        const preferences = await preferenceService.getAllUserPreferences(userId);
+        const preferences = await preferenceService.getUserPreference(userId);
 
         res.json({ success: true, preferences });
     } catch (error) {
@@ -79,37 +93,37 @@ router.get('/preferences/:userId', async (req, res) => {
 });
 
 // Update notification preference
-router.post('/preferences/:userId/:eventType', async (req, res) => {
-    try {
-        const userId = req.params.userId;
-        const eventType = req.params.eventType as NotificationEventType;
-        const { enabled, channels } = req.body;
+router.post(
+    '/preferences/:userId/:eventType',
+    validateSchema(updatePreferenceParamsSchema, 'params'),
+    validateSchema(updatePreferenceBodySchema, 'body'),
+    async (req, res) => {
+        try {
+            const userId = req.params.userId;
+            const { channels } = req.body;
 
-        await preferenceService.updatePreference({
-            userId,
-            eventType,
-            enabled,
-            channels: channels as NotificationType[],
-        });
+            await preferenceService.savePreference({
+                userId,
+                channels: channels as NotificationType[],
+            });
 
-        res.json({ success: true });
-    } catch (error) {
-        console.error('Error updating preference:', error);
-        res.status(500).json({ success: false, error: 'Failed to update preference' });
-    }
-});
+            res.json({ success: true });
+        } catch (error) {
+            console.error('Error updating preference:', error);
+            res.status(500).json({ success: false, error: 'Failed to update preference' });
+        }
+    },
+);
 
 // Send notification event
-router.post('/send-event', async (req, res) => {
+router.post('/send-event', validateSchema(sendEventSchema, 'body'), async (req, res) => {
     try {
-        const { eventType, category, targetUserIds, payload, metadata } = req.body;
+        const { eventType, targetUserIds, payload } = req.body;
 
         await notificationService.publishEvent({
             eventType,
-            category,
             targetUserIds,
             payload,
-            metadata,
         });
 
         res.json({ success: true });

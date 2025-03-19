@@ -1,7 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import { Server } from 'socket.io';
+import { NotificationCategory } from '../events/enum';
 import { supabase } from '../index';
-import { DeliveryStatus, Notification, NotificationCategory, NotificationEventType } from '../types';
+import { DeliveryStatus, Notification } from '../types';
 
 export class NotificationRepository {
     private supabase: ReturnType<typeof createClient>;
@@ -17,8 +18,6 @@ export class NotificationRepository {
                 user_id: notification.userId,
                 event_type: notification.eventType,
                 category: notification.category,
-                title: notification.title,
-                body: notification.body,
                 read: notification.read,
                 data: notification.data,
             })
@@ -33,10 +32,8 @@ export class NotificationRepository {
         return {
             id: data.id as string,
             userId: data.user_id as string,
-            eventType: data.event_type as NotificationEventType,
+            eventType: data.event_type as string,
             category: data.category as NotificationCategory,
-            title: data.title as string,
-            body: data.body as string,
             read: data.read as boolean,
             data: data.data as Record<string, any> | undefined,
             createdAt: new Date(data.created_at as string),
@@ -113,10 +110,8 @@ export class NotificationRepository {
         return data.map((item) => ({
             id: item.id as string,
             userId: item.user_id as string,
-            eventType: item.event_type as NotificationEventType,
+            eventType: item.event_type as string,
             category: item.category as NotificationCategory,
-            title: item.title as string,
-            body: item.body as string,
             read: item.read as boolean,
             data: item.data as Record<string, any> | undefined,
             createdAt: new Date(item.created_at as string),
@@ -158,8 +153,6 @@ export class NotificationRepository {
                         userId: notification.user_id,
                         eventType: notification.event_type,
                         category: notification.category,
-                        title: notification.title,
-                        body: notification.body,
                         read: notification.read,
                         data: notification.data,
                         createdAt: new Date(notification.created_at),

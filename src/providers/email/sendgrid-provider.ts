@@ -10,10 +10,10 @@ export class SendgridProvider extends BaseNotificationProvider {
         super('sendgrid', NotificationType.EMAIL);
     }
 
-    public async send(notification: Notification): Promise<void> {
+    public async send(notification: Notification, content:string): Promise<void> {
         try {
             if (!config.sendGrid.sendGridApikey) {
-                throw new BadRequestError('Api Key For Sendgrid has not been Set!');
+                throw new BadRequestError('[Sendgrid] Api Key has not been Set!');
             }
 
             const transporter = createTransport(
@@ -23,15 +23,15 @@ export class SendgridProvider extends BaseNotificationProvider {
             );
 
             if (!transporter) {
-                throw new BadRequestError('Sendgrid Transporter could not be initialized');
+                throw new BadRequestError('[Sendgrid] Transporter could not be initialized');
             }
 
             const mailOptions = {
                 to: notification.data?.email,
                 from: config.sendGrid.sendgrid_email,
-                subject: notification.title,
-                text: notification.body,
-                html: notification.body,
+                subject: notification.data?.title ?? 'NO_TITLE',
+                text: content,
+                html: content,
             };
 
             await transporter.sendMail(mailOptions);

@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { supabase } from '../index';
-import { NotificationEventType, NotificationPreference, NotificationType } from '../types';
+import { NotificationPreference, NotificationType } from '../types';
 
 export class PreferenceRepository {
     private supabase: ReturnType<typeof createClient>;
@@ -9,59 +9,38 @@ export class PreferenceRepository {
         this.supabase = supabase;
     }
 
-    public async getUserPreference(userId: string, eventType: NotificationEventType): Promise<NotificationPreference | null> {
-        const { data, error } = await this.supabase
-            .from('notification_preferences')
-            .select('*')
-            .eq('user_id', userId)
-            .eq('event_type', eventType)
-            .single();
-
+    public async getUserPreference(userId: string): Promise<NotificationPreference | null> {
+        const { data, error } = await this.supabase.from('users').select('id, notification_preferences').eq('id', userId).single();
         if (error) {
             if (error.code === 'PGRST116') {
-                // No preference found
+                // No user found with this id
                 return null;
             }
             console.error('Error getting user preference:', error);
             throw new Error(`Failed to get user preference: ${error.message}`);
         }
 
+        const channels = data.notification_preferences as NotificationType[];
+
         return {
-            userId: data.user_id as string,
-            eventType: data.event_type as NotificationEventType,
-            channels: data.channels as NotificationType[],
-            enabled: data.enabled as boolean,
+            userId: data.id as string,
+            channels,
         };
     }
 
     public async savePreference(preference: NotificationPreference): Promise<void> {
-        const { error } = await this.supabase.from('notification_preferences').upsert({
-            user_id: preference.userId,
-            event_type: preference.eventType,
-            channels: preference.channels,
-            enabled: preference.enabled,
-        });
+        const { channels, userId } = preference;
+
+        const { error } = await this.supabase
+            .from('users')
+            .update({
+                notification_preferences: channels,
+            })
+            .eq('id', userId);
 
         if (error) {
             console.error('Error saving preference:', error);
             throw new Error(`Failed to save preference: ${error.message}`);
         }
-    }
-
-    public async getAllUserPreferences(userId: string): Promise<NotificationPreference[]> {
-        const { data, error } = await this.supabase.from('notification_preferences').select('*').eq('user_id', userId);
-
-        if (error) {
-            console.error('Error getting all user preferences:', error);
-
-            throw new Error(`Failed to get all user preferences: ${error.message}`);
-        }
-
-        return data.map((item) => ({
-            userId: item.user_id as string,
-            eventType: item.event_type as NotificationEventType,
-            channels: item.channels as NotificationType[],
-            enabled: item.enabled as boolean,
-        }));
     }
 }

@@ -23,6 +23,7 @@ export class ProviderRegistry {
 
     public getProvider(type: NotificationType, name: string): NotificationProvider | undefined {
         const key = `${type}:${name}`;
+
         return this.providers.get(key);
     }
 
