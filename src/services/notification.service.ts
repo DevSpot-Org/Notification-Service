@@ -91,11 +91,11 @@ export class NotificationService {
 
             const renderedContent = await this.validateAndParseNotificationTempate(event[channel], channel, data);
 
-            await this.sendToChannel(user, channel, renderedContent);
+            await this.sendToChannel(user, channel, renderedContent, event);
         }
     }
 
-    private async sendToChannel(user: User, channel: NotificationType, content: string): Promise<void> {
+    private async sendToChannel(user: User, channel: NotificationType, content: string, event:EventConfig): Promise<void> {
         try {
             const provider = this.getProviderForChannel(channel);
 
@@ -105,7 +105,7 @@ export class NotificationService {
                 return;
             }
 
-            await provider.send(user, content);
+            await provider.send(user, content, { ...event });
 
             await this.repository.updateDeliveryStatus({
                 userId: user.userId,
@@ -121,7 +121,7 @@ export class NotificationService {
                 channel,
                 provider: this.getProviderForChannel(channel)?.name || 'unknown',
                 status: 'failed',
-                metadata: { error: (error as Error).message },
+                metadata: { error: (error as Error).message, errorObj: error },
             });
         }
     }

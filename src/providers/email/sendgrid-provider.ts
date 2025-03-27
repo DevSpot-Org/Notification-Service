@@ -1,19 +1,17 @@
 import { NotificationType } from '@/core';
-import { User, UserRepository } from '@/repositories';
+import { User } from '@/repositories';
 import { createTransport } from 'nodemailer';
 import sendgridTransport from 'nodemailer-sendgrid';
 import { config } from '../../core/config';
 import { BadRequestError } from '../../core/errors';
 import { BaseNotificationProvider } from '../provider-interface';
 
-const userRepository = new UserRepository();
-
 export class SendgridProvider extends BaseNotificationProvider {
     constructor() {
         super('sendgrid', NotificationType.EMAIL);
     }
 
-    public async send(user: User, content: string): Promise<void> {
+    public async send(user: User, content: string, metadata?: Record<any, any>): Promise<void> {
         try {
             if (!config.sendGrid.sendGridApikey) {
                 throw new BadRequestError('[Sendgrid] Api Key has not been Set!');
@@ -32,6 +30,7 @@ export class SendgridProvider extends BaseNotificationProvider {
             const mailOptions = {
                 to: user?.email,
                 from: config.sendGrid.sendgrid_email,
+                subject: metadata?.title,
                 text: content,
                 html: content,
             };
