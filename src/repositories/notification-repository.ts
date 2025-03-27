@@ -1,4 +1,4 @@
-import { DeliveryStatus, Notification, NotificationType, supabase } from '@/core';
+import { DeliveryStatus, Notification, supabase } from '@/core';
 import { createClient } from '@supabase/supabase-js';
 import { Server } from 'socket.io';
 import { NotificationCategory } from '../events/enum';
@@ -15,10 +15,12 @@ export class NotificationRepository {
             .from('notifications')
             .insert({
                 user_id: notification.userId,
-                event_type: notification.eventType,
+                title: notification.title,
+                content: notification.content,
                 category: notification.category,
+                action: notification.action,
                 read: notification.read,
-                data: notification.data,
+                metadata: notification.metadata,
             })
             .select()
             .single();
@@ -31,10 +33,14 @@ export class NotificationRepository {
         return {
             id: data.id as string,
             userId: data.user_id as string,
-            eventType: data.event_type as string,
+            title: data.title as string,
+            content: data.content as string,
             category: data.category as NotificationCategory,
             read: data.read as boolean,
-            data: data.data as Record<string, any> | undefined,
+            metadata: {
+                eventType: data.event_type as string,
+                ...((data.metadata as Record<string, any>) || {}),
+            },
             createdAt: new Date(data.created_at as string),
             updatedAt: data.updated_at ? new Date(data.updated_at as string) : undefined,
         };
@@ -42,7 +48,7 @@ export class NotificationRepository {
 
     public async updateDeliveryStatus(delivery: Partial<DeliveryStatus>): Promise<void> {
         const { error } = await this.supabase.from('notification_delivery_status').upsert({
-            userId: delivery.userId,
+            user_id: delivery.userId,
             channel: delivery.channel,
             provider: delivery.provider,
             status: delivery.status,
@@ -85,11 +91,7 @@ export class NotificationRepository {
         userId: string,
         options: { limit?: number; offset?: number; unreadOnly?: boolean } = {},
     ): Promise<Notification[]> {
-        let query = this.supabase
-            .from('notifications')
-            .select('*')
-            .eq('user_id', userId)
-            .order('created_at', { ascending: false });
+        let query = this.supabase.from('notifications').select('*').eq('user_id', userId).order('created_at', { ascending: false });
 
         if (options.limit) {
             query = query.limit(options.limit);
@@ -113,10 +115,14 @@ export class NotificationRepository {
         return data.map((item) => ({
             id: item.id as string,
             userId: item.user_id as string,
-            eventType: item.event_type as string,
+            title: item.title as string,
+            content: item.content as string,
             category: item.category as NotificationCategory,
             read: item.read as boolean,
-            data: item.data as Record<string, any> | undefined,
+            metadata: {
+                eventType: item.event_type as string,
+                ...((item.metadata as Record<string, any>) || {}),
+            },
             createdAt: new Date(item.created_at as string),
             updatedAt: item.updated_at ? new Date(item.updated_at as string) : undefined,
         }));
@@ -127,7 +133,7 @@ export class NotificationRepository {
             .from('notifications')
             .select('*', { count: 'exact', head: true })
             .eq('user_id', userId)
-            .eq('read', false)
+            .eq('read', false);
 
         if (error) {
             console.error('Error getting unread count:', error);

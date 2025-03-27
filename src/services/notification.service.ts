@@ -56,12 +56,20 @@ export class NotificationService {
         }
 
         if (event['in-app']) {
+            const content = await this.validateAndParseNotificationTempate(event['in-app'], NotificationType.IN_APP, data);
+
+            const { title, category } = event;
+
             const notification: Notification = {
                 userId,
-                eventType,
-                category: event.category,
+                title,
+                content,
+                action: data?.action,
+                category,
                 read: false,
-                data,
+                metadata: {
+                    eventType,
+                },
                 createdAt: new Date(),
             };
 
@@ -81,15 +89,7 @@ export class NotificationService {
         for (const channel of preferences.channels) {
             if (!event[channel]) continue;
 
-            const templateContent = await this.templateParser.getTemplateFromEvent(channel, event[channel]!);
-
-            const parseResult = this.templateParser.parseTemplate(templateContent);
-
-            const templateRequiredVariables = parseResult.requiredVariables;
-
-            this.templateParser.validateDataAgainstRequiredVariables(templateRequiredVariables, payload);
-
-            const renderedContent = this.templateParser.renderTemplate(templateContent, data);
+            const renderedContent = await this.validateAndParseNotificationTempate(event[channel], channel, data);
 
             await this.sendToChannel(user, channel, renderedContent);
         }
@@ -139,6 +139,20 @@ export class NotificationService {
         }
 
         return this.providerRegistry.getProvider(channel, providerName);
+    }
+
+    private async validateAndParseNotificationTempate(templateName: string, channel: NotificationType, payload: Record<any, any>) {
+        const templateContent = await this.templateParser.getTemplateFromEvent(channel, templateName);
+
+        const parseResult = this.templateParser.parseTemplate(templateContent);
+
+        const templateRequiredVariables = parseResult.requiredVariables;
+
+        this.templateParser.validateDataAgainstRequiredVariables(templateRequiredVariables, payload);
+
+        const renderedContent = this.templateParser.renderTemplate(templateContent, payload);
+
+        return renderedContent;
     }
 
     public async markAsRead(notificationId: string): Promise<void> {

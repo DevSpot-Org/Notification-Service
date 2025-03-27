@@ -1,4 +1,4 @@
-import { NotificationCategory } from "@/events/enum";
+import { NotificationCategory } from '@/events/enum';
 
 export enum NotificationType {
     EMAIL = 'email',
@@ -23,10 +23,15 @@ export interface NotificationTemplate {
 export interface Notification {
     id?: string;
     userId: string;
-    eventType: string;
+    title: string;
+    content: string;
     category: NotificationCategory;
+    action?: string;
     read: boolean;
-    data?: Record<string, any>;
+    metadata: {
+        eventType: string;
+        [key: string]: any;
+    };
     createdAt?: Date;
     updatedAt?: Date;
 }
