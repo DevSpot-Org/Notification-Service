@@ -42,6 +42,6 @@ export const updatePreferenceBodySchema = Joi.object({
 
 export const sendEventSchema = Joi.object({
     eventType: eventTypeValidation.required(),
-    targetUserIds: Joi.array().items(Joi.string().required()).min(1).required(),
+    userId: Joi.string().required(),
     payload: Joi.object().required(),
 });

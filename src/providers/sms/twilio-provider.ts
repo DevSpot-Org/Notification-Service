@@ -1,7 +1,8 @@
+import { NotificationType } from '@/core';
+import { User } from '@/repositories';
 import twilio from 'twilio';
 import { config } from '../../core/config';
 import { BadRequestError } from '../../core/errors';
-import { Notification, NotificationType } from '@/core';
 import { BaseNotificationProvider } from '../provider-interface';
 
 export class TwilioProvider extends BaseNotificationProvider {
@@ -9,7 +10,7 @@ export class TwilioProvider extends BaseNotificationProvider {
         super('twilio', NotificationType.SMS);
     }
 
-    public async send(notification: Notification, content: string): Promise<void> {
+    public async send(user: User, content: string): Promise<void> {
         try {
             if (!config.twilio.twilio_sid && !config.twilio.twilio_auth_token) {
                 throw new BadRequestError('[Twilio] Api Key has not been Set!');
@@ -28,10 +29,10 @@ export class TwilioProvider extends BaseNotificationProvider {
             await client.messages.create({
                 body: content,
                 from: config.twilio.twilio_phone_number,
-                to: notification?.data?.phoneNumber,
+                to: user?.phone,
             });
 
-            console.log(`[Twilio] SMS sent to ${notification.data?.phoneNumber}`);
+            console.log(`[Twilio] SMS sent to ${user?.phone}`);
         } catch (error) {
             console.error('[Twilio] Error sending SMS:', error);
             throw error;

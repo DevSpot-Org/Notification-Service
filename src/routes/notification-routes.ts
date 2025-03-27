@@ -118,11 +118,11 @@ router.post(
 // Send notification event
 router.post('/send-event', validateSchema(sendEventSchema, 'body'), async (req, res, next) => {
     try {
-        const { eventType, targetUserIds, payload } = req.body;
+        const { eventType, userId, payload } = req.body;
 
         await notificationService.publishEvent({
             eventType,
-            targetUserIds,
+            userId,
             payload,
         });
 

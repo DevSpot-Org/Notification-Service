@@ -42,7 +42,7 @@ export class NotificationRepository {
 
     public async updateDeliveryStatus(delivery: Partial<DeliveryStatus>): Promise<void> {
         const { error } = await this.supabase.from('notification_delivery_status').upsert({
-            notification_id: delivery.notificationId,
+            userId: delivery.userId,
             channel: delivery.channel,
             provider: delivery.provider,
             status: delivery.status,
@@ -89,12 +89,6 @@ export class NotificationRepository {
             .from('notifications')
             .select('*')
             .eq('user_id', userId)
-            .in(
-                'id',
-                (await this.supabase.from('notification_delivery_status').select('notification_id').eq('channel', NotificationType.IN_APP)).data?.map(
-                    (nds) => nds.notification_id,
-                ) ?? [],
-            )
             .order('created_at', { ascending: false });
 
         if (options.limit) {
@@ -134,12 +128,6 @@ export class NotificationRepository {
             .select('*', { count: 'exact', head: true })
             .eq('user_id', userId)
             .eq('read', false)
-            .in(
-                'id',
-                (
-                    await this.supabase.from('notification_delivery_status').select('notification_id').eq('channel', NotificationType.IN_APP)
-                ).data?.map((nds) => nds.notification_id) ?? [],
-            );
 
         if (error) {
             console.error('Error getting unread count:', error);

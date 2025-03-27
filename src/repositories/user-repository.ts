@@ -1,9 +1,10 @@
 import { supabase } from '@/core';
 import { createClient } from '@supabase/supabase-js';
 
-interface UserContactInfo {
+export interface User {
     userId: string;
     email: string;
+    phone: string;
 }
 
 export class UserRepository {
@@ -13,7 +14,7 @@ export class UserRepository {
         this.supabase = supabase;
     }
 
-    public async getUserContactInfo(userId: string): Promise<UserContactInfo | null> {
+    public async getUser(userId: string): Promise<User | null> {
         const { data, error } = await this.supabase.from('users').select('id, email').eq('id', userId).single();
 
         if (error) {
@@ -30,6 +31,7 @@ export class UserRepository {
         return {
             userId: data.id as string,
             email,
+            phone: '',
         };
     }
 }

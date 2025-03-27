@@ -8,7 +8,7 @@ export enum NotificationType {
 
 export interface NotificationEvent {
     eventType: string;
-    targetUserIds: string[];
+    userId: string;
     payload: Record<string, any>;
 }
 
@@ -38,7 +38,7 @@ export interface NotificationPreference {
 
 export interface DeliveryStatus {
     id: string;
-    notificationId: string;
+    userId: string;
     channel: NotificationType;
     provider: string;
     status: 'pending' | 'sent' | 'delivered' | 'failed';

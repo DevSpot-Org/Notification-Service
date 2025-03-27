@@ -1,9 +1,10 @@
-import { Notification, NotificationType } from '@/core';
+import { NotificationType } from '@/core';
+import { User } from '@/repositories';
 
 export interface NotificationProvider {
     name: string;
     type: NotificationType;
-    send(notification: Notification, content: string): Promise<void>;
+    send(user: User, content: string): Promise<void>;
 }
 
 export abstract class BaseNotificationProvider implements NotificationProvider {
@@ -15,5 +16,5 @@ export abstract class BaseNotificationProvider implements NotificationProvider {
         this.type = type;
     }
 
-    abstract send(notification: Notification, content: string): Promise<void>;
+    abstract send(user: User, content: string): Promise<void>;
 }

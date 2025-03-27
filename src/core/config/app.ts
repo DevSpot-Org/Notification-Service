@@ -8,10 +8,6 @@ interface AppConfig {
             default: string;
             available: string[];
         };
-        inApp: {
-            default: string;
-            available: string[];
-        };
     };
     templates: {
         path: string;
@@ -27,10 +23,6 @@ export const appConfig: AppConfig = {
         sms: {
             default: '',
             available: ['twilio'],
-        },
-        inApp: {
-            default: 'socket.io',
-            available: ['socket.io'],
         },
     },
     templates: {

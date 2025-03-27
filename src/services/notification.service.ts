@@ -1,4 +1,6 @@
 import { Notification, NotificationEvent, NotificationType } from '@/core';
+import { User, UserRepository } from '@/repositories';
+import { socketManager } from '..';
 import { appConfig } from '../core/config';
 import { BadRequestError } from '../core/errors';
 import { events } from '../events';
@@ -13,6 +15,7 @@ export class NotificationService {
     private static instance: NotificationService;
     private providerRegistry: ProviderRegistry;
     private repository: NotificationRepository;
+    private userRepository: UserRepository;
     private templateParser: TemplateParser;
     private preferenceRepository: PreferenceRepository;
     private events: EventConfig[];
@@ -20,6 +23,7 @@ export class NotificationService {
     private constructor() {
         this.providerRegistry = ProviderRegistry.getInstance();
         this.repository = new NotificationRepository();
+        this.userRepository = new UserRepository();
         this.preferenceRepository = new PreferenceRepository();
         this.events = events;
         this.templateParser = new TemplateParser();
@@ -36,52 +40,62 @@ export class NotificationService {
         return this.events.find((event) => event.slug === slug);
     }
 
-    public async publishEvent(event: NotificationEvent): Promise<void> {
-        const eventConfig = this.findEventBySlug(event.eventType);
+    public async publishEvent(payload: NotificationEvent): Promise<void> {
+        const { eventType, payload: data, userId } = payload;
 
-        if (!eventConfig) {
-            throw new BadRequestError(`Event not found: ${event.eventType}`);
+        const event = this.findEventBySlug(eventType);
+
+        if (!event) {
+            throw new BadRequestError(`Event not found: ${eventType}`);
         }
 
-        for (const userId of event.targetUserIds) {
-            const preferences = await this.preferenceRepository.getUserPreference(userId);
+        const user = await this.userRepository.getUser(userId);
 
-            if (!preferences) {
-                console.log(`Notification skipped for user ${userId} due to preferences`);
+        if (!user) {
+            throw new BadRequestError(`User not found: ${userId}`);
+        }
 
-                continue;
-            }
-
-            for (const channel of preferences.channels) {
-                if (!eventConfig[channel]) continue;
-
-                await this.validateEventTemplateAgainstVariables(channel, eventConfig, event.payload);
-            }
-
+        if (event['in-app']) {
             const notification: Notification = {
                 userId,
-                eventType: event.eventType,
-                category: eventConfig.category,
+                eventType,
+                category: event.category,
                 read: false,
-                data: event.payload,
+                data,
                 createdAt: new Date(),
             };
 
             const savedNotification = await this.repository.createNotification(notification);
 
-            for (const channel of preferences.channels) {
-                if (!eventConfig[channel]) continue;
+            socketManager.sendToUser(savedNotification.userId, 'notification', savedNotification);
+        }
 
-                const templateContent = await this.templateParser.getTemplateFromEvent(channel, eventConfig[channel]);
+        const preferences = await this.preferenceRepository.getUserPreference(userId);
 
-                const renderedContent = this.templateParser.renderTemplate(templateContent, event.payload);
+        if (!preferences) {
+            console.log(`Notification skipped for user ${userId} due to preferences`);
 
-                await this.sendToChannel(savedNotification, channel, renderedContent);
-            }
+            return;
+        }
+
+        for (const channel of preferences.channels) {
+            if (!event[channel]) continue;
+
+            const templateContent = await this.templateParser.getTemplateFromEvent(channel, event[channel]!);
+
+            const parseResult = this.templateParser.parseTemplate(templateContent);
+
+            const templateRequiredVariables = parseResult.requiredVariables;
+
+            this.templateParser.validateDataAgainstRequiredVariables(templateRequiredVariables, payload);
+
+            const renderedContent = this.templateParser.renderTemplate(templateContent, data);
+
+            await this.sendToChannel(user, channel, renderedContent);
         }
     }
 
-    private async sendToChannel(notification: Notification, channel: NotificationType, content: string): Promise<void> {
+    private async sendToChannel(user: User, channel: NotificationType, content: string): Promise<void> {
         try {
             const provider = this.getProviderForChannel(channel);
 
@@ -91,10 +105,10 @@ export class NotificationService {
                 return;
             }
 
-            await provider.send(notification, content);
+            await provider.send(user, content);
 
             await this.repository.updateDeliveryStatus({
-                notificationId: notification.id!,
+                userId: user.userId,
                 channel,
                 provider: provider.name,
                 status: 'sent',
@@ -103,7 +117,7 @@ export class NotificationService {
             console.error(`Error sending notification through ${channel}:`, error);
 
             await this.repository.updateDeliveryStatus({
-                notificationId: notification.id!,
+                userId: user.userId,
                 channel,
                 provider: this.getProviderForChannel(channel)?.name || 'unknown',
                 status: 'failed',
@@ -122,24 +136,9 @@ export class NotificationService {
             case NotificationType.SMS:
                 providerName = appConfig.providers.sms.default;
                 break;
-            case NotificationType.IN_APP:
-                providerName = appConfig.providers.inApp.default;
-                break;
         }
 
-        console.log(providerName, 'provider', channel, 'channel')
-
         return this.providerRegistry.getProvider(channel, providerName);
-    }
-
-    private async validateEventTemplateAgainstVariables(channel: NotificationType, eventConfig: EventConfig, payload: Record<any, any>) {
-        const templateContent = await this.templateParser.getTemplateFromEvent(channel, eventConfig[channel]!);
-
-        const parseResult = this.templateParser.parseTemplate(templateContent);
-
-        const templateRequiredVariables = parseResult.requiredVariables;
-
-        this.templateParser.validateDataAgainstRequiredVariables(templateRequiredVariables, payload);
     }
 
     public async markAsRead(notificationId: string): Promise<void> {

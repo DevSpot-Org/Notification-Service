@@ -19,11 +19,13 @@ export class PreferenceRepository {
             throw new Error(`Failed to get user preference: ${error.message}`);
         }
 
-        const channels = data.notification_preferences as NotificationType[];
+        const allChannels = data.notification_preferences as NotificationType[];
+        const userChannels = allChannels.filter((channel: NotificationType) => channel !== NotificationType.IN_APP);
+
 
         return {
             userId: data.id as string,
-            channels,
+            channels: userChannels,
         };
     }
 
