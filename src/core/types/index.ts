@@ -23,8 +23,8 @@ export interface NotificationTemplate {
 export type NotificationMessageType = 'success' | 'info' | 'warning' | 'error';
 
 export interface NotificationAction {
-    url:string
-    label:string
+    url: string;
+    label: string;
 }
 
 export interface Notification {
@@ -58,4 +58,19 @@ export interface DeliveryStatus {
     createdAt: Date;
     updatedAt: Date;
     metadata?: Record<string, any>;
+}
+
+export interface GroupedNotifications {
+    today: Notification[];
+    yesterday: Notification[];
+    earlierThisWeek: Notification[];
+    lastWeek: Notification[];
+    older: Notification[];
+}
+
+export interface GetUserNotificationsOptions {
+    limit: number;
+    offset: number;
+    unreadOnly: boolean;
+    sortByDate: boolean;
 }

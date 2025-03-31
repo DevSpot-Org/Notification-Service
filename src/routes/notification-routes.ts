@@ -27,7 +27,7 @@ router.get(
             const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
             const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
 
-            const notifications = await notificationService.getUserNotifications(userId, { limit, offset });
+            const notifications = await notificationService.getUserNotifications(userId, { limit, offset, sortByDate: true });
 
             res.json({ success: true, notifications });
         } catch (error) {

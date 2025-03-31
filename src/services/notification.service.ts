@@ -1,4 +1,4 @@
-import { Notification, NotificationEvent, NotificationType } from '@/core';
+import { GetUserNotificationsOptions, GroupedNotifications, Notification, NotificationEvent, NotificationType } from '@/core';
 import { User, UserRepository } from '@/repositories';
 import { socketManager } from '..';
 import { appConfig } from '../core/config';
@@ -58,7 +58,7 @@ export class NotificationService {
         if (event['in-app']) {
             const content = await this.validateAndParseNotificationTempate(event['in-app'], NotificationType.IN_APP, data);
 
-            const { title, category,type } = event;
+            const { title, category, type } = event;
 
             const notification: Notification = {
                 userId,
@@ -96,7 +96,7 @@ export class NotificationService {
         }
     }
 
-    private async sendToChannel(user: User, channel: NotificationType, content: string, event:EventConfig): Promise<void> {
+    private async sendToChannel(user: User, channel: NotificationType, content: string, event: EventConfig): Promise<void> {
         try {
             const provider = this.getProviderForChannel(channel);
 
@@ -164,7 +164,10 @@ export class NotificationService {
         await this.repository.markAllAsRead(userId);
     }
 
-    public async getUserNotifications(userId: string, options?: { limit?: number; offset?: number; unreadOnly?: boolean }): Promise<Notification[]> {
+    public async getUserNotifications(
+        userId: string,
+        options?: Partial<GetUserNotificationsOptions>,
+    ): Promise<Notification[] | GroupedNotifications> {
         return this.repository.getUserInAppNotifications(userId, options);
     }
 
