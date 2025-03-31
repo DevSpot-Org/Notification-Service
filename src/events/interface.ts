@@ -1,4 +1,4 @@
-import { NotificationType } from '@/core';
+import { NotificationMessageType, NotificationType } from '@/core';
 import { NotificationCategory } from './enum';
 import { emailTemplates } from './templates/email';
 import { inAppTemplates } from './templates/in-app';
@@ -20,6 +20,7 @@ interface BaseEventConfig {
     slug: string;
     title: string;
     category: NotificationCategory;
+    type: NotificationMessageType;
     description?: string;
 }
 

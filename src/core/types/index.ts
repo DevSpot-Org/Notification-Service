@@ -20,13 +20,21 @@ export interface NotificationTemplate {
     data?: Record<string, any>;
 }
 
+export type NotificationMessageType = 'success' | 'info' | 'warning' | 'error';
+
+export interface NotificationAction {
+    url:string
+    label:string
+}
+
 export interface Notification {
     id?: string;
     userId: string;
     title: string;
     content: string;
+    type: NotificationMessageType;
     category: NotificationCategory;
-    action?: string;
+    action?: NotificationAction;
     read: boolean;
     metadata: {
         eventType: string;

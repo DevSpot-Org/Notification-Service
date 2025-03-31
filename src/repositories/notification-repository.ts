@@ -1,4 +1,4 @@
-import { DeliveryStatus, Notification, supabase } from '@/core';
+import { DeliveryStatus, Notification, NotificationAction, NotificationMessageType, supabase } from '@/core';
 import { createClient } from '@supabase/supabase-js';
 import { Server } from 'socket.io';
 import { NotificationCategory } from '../events/enum';
@@ -15,6 +15,7 @@ export class NotificationRepository {
             .from('notifications')
             .insert({
                 user_id: notification.userId,
+                type: notification.type,
                 title: notification.title,
                 content: notification.content,
                 category: notification.category,
@@ -36,6 +37,8 @@ export class NotificationRepository {
             title: data.title as string,
             content: data.content as string,
             category: data.category as NotificationCategory,
+            type: data.type as NotificationMessageType,
+            action: data.action as NotificationAction,
             read: data.read as boolean,
             metadata: {
                 eventType: data.event_type as string,
@@ -118,6 +121,8 @@ export class NotificationRepository {
             title: item.title as string,
             content: item.content as string,
             category: item.category as NotificationCategory,
+            type: item.type as NotificationMessageType,
+            action: item.action as NotificationAction,
             read: item.read as boolean,
             metadata: {
                 eventType: item.event_type as string,

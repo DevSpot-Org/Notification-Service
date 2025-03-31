@@ -58,12 +58,13 @@ export class NotificationService {
         if (event['in-app']) {
             const content = await this.validateAndParseNotificationTempate(event['in-app'], NotificationType.IN_APP, data);
 
-            const { title, category } = event;
+            const { title, category,type } = event;
 
             const notification: Notification = {
                 userId,
                 title,
                 content,
+                type,
                 action: data?.action,
                 category,
                 read: false,
