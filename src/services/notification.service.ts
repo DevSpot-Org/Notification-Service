@@ -58,7 +58,7 @@ export class NotificationService {
         if (event['in-app']) {
             const { title, category, type } = event;
 
-            const notifications: Notification = {
+            const notification: Notification = {
                 userId,
                 title,
                 content: '',
@@ -68,28 +68,17 @@ export class NotificationService {
                 read: false,
                 metadata: {
                     eventType,
+                    ...event,
                 },
                 createdAt: new Date(),
             };
 
             const content = await this.validateAndParseNotificationTempate(event['in-app'], NotificationType.IN_APP, {
                 ...data,
-                notification: JSON.stringify(notifications),
+                notification: JSON.stringify(notification),
             });
 
-            const notification: Notification = {
-                userId,
-                title,
-                content,
-                type,
-                action: data?.action,
-                category,
-                read: false,
-                metadata: {
-                    eventType,
-                },
-                createdAt: new Date(),
-            };
+            notification.content = content;
 
             const savedNotification = await this.repository.createNotification(notification);
 
