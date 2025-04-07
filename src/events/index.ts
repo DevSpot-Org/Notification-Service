@@ -11,5 +11,12 @@ export const events: EventConfig[] = [
         category: NotificationCategory.TO_ACCOUNT_SETUP,
         [NotificationType.IN_APP]: 'default',
         [NotificationType.EMAIL]: 'hackathon_invitation',
+        actionButtons: [
+            {
+                type: 'redirect',
+                label: 'View Hackathon',
+                route: '/hackathons',
+            },
+        ],
     },
 ];

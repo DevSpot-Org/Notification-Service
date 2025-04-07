@@ -40,7 +40,7 @@ export class NotificationService {
         return this.events.find((event) => event.slug === slug);
     }
 
-    public async publishEvent(payload: NotificationEvent): Promise<void> {
+    public async publishEvent(payload: NotificationEvent): Promise<any> {
         const { eventType, payload: data, userId } = payload;
 
         const event = this.findEventBySlug(eventType);
@@ -56,9 +56,26 @@ export class NotificationService {
         }
 
         if (event['in-app']) {
-            const content = await this.validateAndParseNotificationTempate(event['in-app'], NotificationType.IN_APP, data);
-
             const { title, category, type } = event;
+
+            const notifications: Notification = {
+                userId,
+                title,
+                content: '',
+                type,
+                action: data?.action,
+                category,
+                read: false,
+                metadata: {
+                    eventType,
+                },
+                createdAt: new Date(),
+            };
+
+            const content = await this.validateAndParseNotificationTempate(event['in-app'], NotificationType.IN_APP, {
+                ...data,
+                notification: JSON.stringify(notifications),
+            });
 
             const notification: Notification = {
                 userId,

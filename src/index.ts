@@ -28,7 +28,7 @@ app.use('/api/notifications', notificationRoutes);
 
 const socketManager = new SocketManager(server, {
     cors: corsOptions,
-    debug: false,
+    debug: true,
 });
 
 const io = socketManager.getIO();

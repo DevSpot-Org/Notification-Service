@@ -120,13 +120,13 @@ router.post('/send-event', validateSchema(sendEventSchema, 'body'), async (req, 
     try {
         const { eventType, userId, payload } = req.body;
 
-        await notificationService.publishEvent({
+        const data = await notificationService.publishEvent({
             eventType,
             userId,
             payload,
         });
 
-        res.json({ success: true });
+        res.json({ success: true, data });
     } catch (error: any) {
         next(error);
     }
